@@ -12,15 +12,6 @@ var rest_api_server = http.createServer(function(req, res) {
   var path = parsedURL.pathname;
   var trimmedpath = path.replace(/^\/+|\/+$/g,'');
 
-  // Get the HTTP method
-  var method = req.method.toLowerCase();
-
-  // Get the query string
-  var querystring = parsedURL.query;
-
-  // Get the request headers
-  var headersObject = req.headers;
-
   // Get the Payload, if there's any
   var decoder = new StringDecoder('utf-8');
   var buffer = '';
@@ -30,18 +21,9 @@ var rest_api_server = http.createServer(function(req, res) {
   req.on('end', function() {
     buffer += decoder.end();
 
-    var chosenhandler = typeof(router[trimmedpath]) !== 'undefined' ? router[trimmedpath] : handlers.notFound;
+    var chosenhandler = typeof(router[trimmedpath]) !== 'undefined' ? router[trimmedpath] : handlers.notfound;
 
-    // Data object to be sent to handler
-    var data = {
-      'trimmedPath': trimmedpath,
-      'queryStringObject': querystring,
-      'method': method,
-      'headers': headersObject,
-      'payload': buffer
-    }
-
-    chosenhandler(data, function(statuscode, payload) {
+    chosenhandler(function(statuscode, payload) {
       statuscode = typeof(statuscode) == 'number' ? statuscode : 200;
 
       payload = typeof(payload) == 'object' ? payload : {};
@@ -50,6 +32,7 @@ var rest_api_server = http.createServer(function(req, res) {
       var payloadstring = JSON.stringify(payload);
 
       // Return the response
+      res.setHeader('Content-Type', 'application/json')
       res.writeHead(statuscode);
       res.end(payloadstring);
 
@@ -69,12 +52,12 @@ rest_api_server.listen(1234, function() {
 var handlers = {};
 
 // Defining hello handler
-handlers.hello = function(data, callback) {
+handlers.hello = function(callback) {
   callback(200, {'msg': 'Welcome to my REST API!'});
 };
 
 // Defining not found handler
-handlers.notfound = function(data, callback) {
+handlers.notfound = function(callback) {
   callback(404);
 }
 
