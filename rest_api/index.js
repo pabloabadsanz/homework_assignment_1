@@ -1,6 +1,7 @@
 // Dependencies
 var http = require('http');
 var url = require('url');
+var StringDecoder = require('string_decoder').StringDecoder;
 
 var rest_api_server = http.createServer(function(req, res) {
 
@@ -20,12 +21,42 @@ var rest_api_server = http.createServer(function(req, res) {
   // Get the request headers
   var headersObject = req.headers;
 
-  // Send the response
-  res.end("Hello REST API client\n");
+  // Get the Payload, if there's any
+  var decoder = new StringDecoder('utf-8');
+  var buffer = '';
+  req.on('data', function(data) {
+    buffer += decoder.write(data);
+  });
+  req.on('end', function() {
+    buffer += decoder.end();
 
-  // Log requested path
-  console.log(method + " /" + trimmedpath + ' params:', querystring);
-  console.log(headersObject);
+    var chosenhandler = typeof(router[trimmedpath]) !== 'undefined' ? router[trimmedpath] : handlers.notFound;
+
+    // Data object to be sent to handler
+    var data = {
+      'trimmedPath': trimmedpath,
+      'queryStringObject': querystring,
+      'method': method,
+      'headers': headersObject,
+      'payload': buffer
+    }
+
+    chosenhandler(data, function(statuscode, payload) {
+      statuscode = typeof(statuscode) == 'number' ? statuscode : 200;
+
+      payload = typeof(payload) == 'object' ? payload : {};
+
+      // Convert the payload to string
+      var payloadstring = JSON.stringify(payload);
+
+      // Return the response
+      res.writeHead(statuscode);
+      res.end(payloadstring);
+
+      console.log("Response:", statuscode, payloadstring);
+    });
+
+  });
 
 });
 
@@ -33,3 +64,21 @@ var rest_api_server = http.createServer(function(req, res) {
 rest_api_server.listen(1234, function() {
   console.log("REST API server listening on port 1234");
 });
+
+// Handlers
+var handlers = {};
+
+// Defining hello handler
+handlers.hello = function(data, callback) {
+  callback(200, {'msg': 'Welcome to my REST API!'});
+};
+
+// Defining not found handler
+handlers.notfound = function(data, callback) {
+  callback(404);
+}
+
+// Defining a request router
+var router = {
+  'hello': handlers.hello
+}
