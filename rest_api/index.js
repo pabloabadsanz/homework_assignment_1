@@ -17,11 +17,15 @@ var rest_api_server = http.createServer(function(req, res) {
   // Get the query string
   var querystring = parsedURL.query;
 
+  // Get the request headers
+  var headersObject = req.headers;
+
   // Send the response
   res.end("Hello REST API client\n");
 
   // Log requested path
   console.log(method + " /" + trimmedpath + ' params:', querystring);
+  console.log(headersObject);
 
 });
 
