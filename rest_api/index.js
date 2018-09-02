@@ -11,11 +11,14 @@ var rest_api_server = http.createServer(function(req, res) {
   var path = parsedURL.pathname;
   var trimmedpath = path.replace(/^\/+|\/+$/g,'');
 
+  // Get the HTTP method
+  var method = req.method.toLowerCase();
+
   // Send the response
   res.end("Hello REST API client\n");
 
   // Log requested path
-  console.log("REQUEST " + trimmedpath);
+  console.log(method + " /" + trimmedpath);
 
 });
 
