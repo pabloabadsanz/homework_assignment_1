@@ -14,11 +14,14 @@ var rest_api_server = http.createServer(function(req, res) {
   // Get the HTTP method
   var method = req.method.toLowerCase();
 
+  // Get the query string
+  var querystring = parsedURL.query;
+
   // Send the response
   res.end("Hello REST API client\n");
 
   // Log requested path
-  console.log(method + " /" + trimmedpath);
+  console.log(method + " /" + trimmedpath + ' params:', querystring);
 
 });
 
